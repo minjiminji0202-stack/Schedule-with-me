@@ -875,7 +875,7 @@
   // ── 초기화 ──────────────────────────────
   window.addEventListener('DOMContentLoaded', async () => {
     user = JSON.parse(sessionStorage.getItem('user'));
-    if (!user) { location.href = '/frontend/login.html'; return; }
+    if (!user) { location.href = '/Schedule-with-me/frontend/login.html'; return; }
 
     const now = new Date();
     currentYear = now.getFullYear();
@@ -1179,7 +1179,7 @@
   // ── 날짜 클릭 → detail ────────────────────
   function goToDetail(dateStr) {
     sessionStorage.setItem('selectedDate', dateStr);
-    location.href = '/frontend/detail.html';
+    location.href = '/Schedule-with-me/frontend/detail.html';
   }
 
   // ── 유틸 ─────────────────────────────────
@@ -1189,7 +1189,7 @@
 
   function logout() {
     sessionStorage.removeItem('user');
-    location.href = '/frontend/login.html';
+    location.href = '/Schedule-with-me/frontend/login.html';
   }
 
   // ── 챗봇 ─────────────────────────────────

@@ -484,7 +484,7 @@
 <nav class="nav">
   <div class="nav-left">
     <div class="nav-logo">Schedule<span> with me</span></div>
-    <button class="back-btn" onclick="location.href='/frontend/index.html'">← 대시보드</button>
+    <button class="back-btn" onclick="location.href='/Schedule-with-me/frontend/index.html'">← 대시보드</button>
   </div>
   <div style="font-family:'DM Mono',monospace; font-size:11px; color:var(--muted);" id="navUser">—</div>
 </nav>
@@ -583,7 +583,7 @@
   // ── 초기화 ───────────────────────────────
   window.addEventListener('DOMContentLoaded', async () => {
     user = JSON.parse(sessionStorage.getItem('user'));
-    if (!user) { location.href = '/frontend/login.html'; return; }
+    if (!user) { location.href = '/Schedule-with-me/frontend/login.html'; return; }
 
     selectedDate = sessionStorage.getItem('selectedDate') || getTodayStr();
     document.getElementById('navUser').textContent = user.name;

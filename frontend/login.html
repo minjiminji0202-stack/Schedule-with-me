@@ -520,7 +520,7 @@
 
       sessionStorage.setItem('user', JSON.stringify(data));
       showToast('로그인 성공! 이동합니다...');
-      setTimeout(() => location.href = '/frontend/index.html', 800);
+      setTimeout(() => location.href = '/Schedule-with-me/frontend/index.html', 800);
     } catch (e) {
       errEl.textContent = e.message;
       errEl.classList.add('show');
