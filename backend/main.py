@@ -7,7 +7,7 @@ import re
 import os
 import httpx
 import json
-from database import get_connection, init_db
+from backend.database import get_connection, init_db
 
 app = FastAPI()
 
