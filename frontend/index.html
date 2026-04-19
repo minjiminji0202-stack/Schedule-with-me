@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyOS — 대시보드</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f0e;
+    --surface: #141714;
+    --surface2: #191c19;
+    --border: #252825;
+    --accent: #b5d49b;
+    --accent-dim: #7aa362;
+    --text: #e8ede6;
+    --muted: #6b7a68;
+    --danger: #d4736b;
+    --warn: #d4b96b;
+    --input-bg: #1a1e1a;
+    --subject-colors: #b5d49b, #9bbdd4, #d4b96b, #d49bb5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* 상단 네비 */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .nav-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+  }
+  .nav-logo span { color: var(--accent); }
+
+  .nav-user {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .nav-info {
+    text-align: right;
+  }
+
+  .nav-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .nav-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .nav-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 6px 14px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.06em;
+  }
+
+  .nav-btn:hover { border-color: var(--muted); color: var(--text); }
+  .nav-btn.primary { border-color: var(--accent-dim); color: var(--accent); }
+  .nav-btn.primary:hover { background: rgba(181,212,155,0.08); }
+
+  /* 메인 레이아웃 */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    height: calc(100vh - 57px);
+  }
+
+  /* 왼쪽: 캘린더 */
+  .calendar-panel {
+    width: 420px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    overflow-y: auto;
+  }
+
+  /* 캘린더 헤더 */
+  .cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .cal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    letter-spacing: -0.3px;
+  }
+
+  .cal-nav-btns {
+    display: flex;
+    gap: 4px;
+  }
+
+  .cal-nav-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .cal-nav-btn:hover { border-color: var(--muted); color: var(--text); }
+
+  /* 요일 헤더 */
+  .cal-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 8px;
+  }
+
+  .cal-weekday {
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    padding: 6px 0;
+  }
+
+  .cal-weekday:first-child { color: #d47a7a; }
+  .cal-weekday:last-child { color: #7a9bd4; }
+
+  /* 날짜 그리드 */
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+  }
+
+  .cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 6px 4px 4px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+    border: 1px solid transparent;
+  }
+
+  .cal-day:not(.empty):hover {
+    background: var(--surface2);
+    border-color: var(--border);
+  }
+
+  .cal-day.empty { cursor: default; }
+
+  .cal-day.today .day-num {
+    background: var(--accent);
+    color: #0d0f0e;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cal-day.selected {
+    background: rgba(181,212,155,0.08);
+    border-color: var(--accent-dim) !important;
+  }
+
+  .day-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 3px;
+  }
+
+  .cal-day.sun .day-num { color: #d47a7a; }
+  .cal-day.sat .day-num { color: #7a9bd4; }
+  .cal-day.other-month .day-num { color: var(--muted); opacity: 0.4; }
+
+  /* 날짜 도트 (task 표시) */
+  .day-dots {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 28px;
+  }
+
+  .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+  }
+
+  .dot.done { background: var(--muted); opacity: 0.4; }
+  .dot.s0 { background: #b5d49b; }
+  .dot.s1 { background: #9bbdd4; }
+  .dot.s2 { background: #d4b96b; }
+  .dot.s3 { background: #d49bb5; }
+
+  /* 통계 카드 */
+  .stats-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .stat-card {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 12px 14px;
+  }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .stat-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--accent);
+  }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* 오른쪽: 오늘 할일 */
+  .tasks-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .tasks-header {
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .tasks-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+  }
+
+  .tasks-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-top: 4px;
+  }
+
+  .add-task-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 7px 14px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.06em;
+    border-color: var(--accent-dim);
+  }
+
+  .add-task-btn:hover { background: rgba(181,212,155,0.08); }
+
+  /* 할일 목록 */
+  .tasks-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 24px;
+  }
+
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+    background: var(--surface);
+  }
+
+  .task-item:hover { border-color: #333b33; }
+  .task-item.done { opacity: 0.45; }
+
+  .task-check {
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .task-check:hover { border-color: var(--accent-dim); }
+  .task-item.done .task-check {
+    background: var(--accent-dim);
+    border-color: var(--accent-dim);
+  }
+
+  .check-icon { display: none; font-size: 10px; color: #0d0f0e; }
+  .task-item.done .check-icon { display: block; }
+
+  .task-info { flex: 1; min-width: 0; }
+
+  .task-name {
+    font-size: 14px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .task-item.done .task-name {
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .subject-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+  }
+
+  .s0 { background: rgba(181,212,155,0.12); color: #b5d49b; }
+  .s1 { background: rgba(155,189,212,0.12); color: #9bbdd4; }
+  .s2 { background: rgba(212,185,107,0.12); color: #d4b96b; }
+  .s3 { background: rgba(212,155,181,0.12); color: #d49bb5; }
+
+  .task-deadline {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .task-del-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 2px;
+    transition: color 0.15s;
+    flex-shrink: 0;
+    opacity: 0;
+  }
+
+  .task-item:hover .task-del-btn { opacity: 1; }
+  .task-del-btn:hover { color: var(--danger); }
+
+  .empty-tasks {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--muted);
+  }
+
+  .empty-tasks .icon { font-size: 32px; margin-bottom: 12px; }
+  .empty-tasks p { font-size: 13px; line-height: 1.8; }
+
+  /* 챗봇 */
+  .chat-bar {
+    border-top: 1px solid var(--border);
+    padding: 14px 24px;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .chat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--accent-dim);
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  .chat-messages {
+    max-height: 120px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .chat-msg {
+    font-size: 12px;
+    padding: 7px 12px;
+    border-radius: 2px;
+    max-width: 85%;
+    line-height: 1.5;
+  }
+
+  .chat-msg.user {
+    background: rgba(181,212,155,0.1);
+    color: var(--accent);
+    align-self: flex-end;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  .chat-msg.bot {
+    background: var(--surface2);
+    color: var(--text);
+    align-self: flex-start;
+    border: 1px solid var(--border);
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  .chat-input-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .chat-input {
+    flex: 1;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .chat-input:focus { border-color: var(--accent-dim); }
+  .chat-input::placeholder { color: var(--muted); }
+
+  .chat-send-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 0 18px;
+    border-radius: 2px;
+    letter-spacing: 0.06em;
+    cursor: not-allowed;
+  }
+
+  .chat-send-btn.active {
+    border-color: var(--accent-dim);
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .chat-send-btn.active:hover { background: rgba(181,212,155,0.08); }
+
+  /* 모달 오버레이 */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13,15,14,0.85);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 32px;
+    width: 460px;
+    max-width: 90vw;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.6);
+  }
+
+  .modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+
+  .modal-sub {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+
+  .modal-field { margin-bottom: 16px; }
+
+  .modal-field label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .modal-field input, .modal-field select {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    padding: 10px 14px;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .modal-field input:focus, .modal-field select:focus {
+    border-color: var(--accent-dim);
+  }
+
+  .modal-field select option { background: var(--input-bg); }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .modal-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 2px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--muted);
+  }
+
+  .modal-btn.primary {
+    background: var(--accent);
+    color: #0d0f0e;
+    border-color: var(--accent);
+  }
+
+  .modal-btn.primary:hover { background: #c8e4af; }
+  .modal-btn:hover { border-color: var(--muted); color: var(--text); }
+
+  /* 만료 task 피드백 */
+  .expired-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .expired-item {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 12px 14px;
+  }
+
+  .expired-item-name {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .diff-btns {
+    display: flex;
+    gap: 6px;
+  }
+
+  .diff-btn {
+    flex: 1;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+
+  .diff-btn:hover { border-color: var(--muted); color: var(--text); }
+  .diff-btn.selected { border-color: var(--accent-dim); color: var(--accent); background: rgba(181,212,155,0.08); }
+
+  /* 토스트 */
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 12px 18px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    z-index: 200;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.25s;
+    max-width: 280px;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-left: 3px solid var(--accent); }
+  .toast.error { border-left: 3px solid var(--danger); }
+  .toast.warn { border-left: 3px solid var(--warn); }
+
+  /* 스크롤바 */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .task-item { animation: fadeIn 0.2s ease both; }
+
+  /* 로딩 */
+  .loading-dots::after {
+    content: '';
+    animation: dots 1.2s steps(3, end) infinite;
+  }
+  @keyframes dots {
+    0%   { content: ''; }
+    33%  { content: '.'; }
+    66%  { content: '..'; }
+    100% { content: '...'; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 네비 -->
+<nav class="nav">
+  <div class="nav-logo">Study<span>OS</span></div>
+  <div class="nav-user">
+    <div class="nav-info">
+      <div class="nav-name" id="navName">—</div>
+      <div class="nav-meta" id="navMeta">—</div>
+    </div>
+    <button class="nav-btn primary" onclick="openAddTaskModal()">+ TASK</button>
+    <button class="nav-btn" onclick="redistributeTasks()">재배분</button>
+    <button class="nav-btn" onclick="logout()">LOGOUT</button>
+  </div>
+</nav>
+
+<!-- 메인 -->
+<div class="main">
+
+  <!-- 캘린더 -->
+  <div class="calendar-panel">
+    <div class="cal-header">
+      <div class="cal-title" id="calTitle">—</div>
+      <div class="cal-nav-btns">
+        <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+        <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+      </div>
+    </div>
+    <div class="cal-weekdays">
+      <div class="cal-weekday">일</div>
+      <div class="cal-weekday">월</div>
+      <div class="cal-weekday">화</div>
+      <div class="cal-weekday">수</div>
+      <div class="cal-weekday">목</div>
+      <div class="cal-weekday">금</div>
+      <div class="cal-weekday">토</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card">
+        <div class="stat-label">오늘 완료</div>
+        <div class="stat-val" id="statDone">0</div>
+        <div class="stat-sub" id="statDoneSub">/ 0 tasks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">이번 달</div>
+        <div class="stat-val" id="statMonth">0</div>
+        <div class="stat-sub">완료한 tasks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">달성률</div>
+        <div class="stat-val" id="statRate">0%</div>
+        <div class="stat-sub">이번 달 전체</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 오른쪽: 오늘 할일 + 챗봇 -->
+  <div class="tasks-panel">
+    <div class="tasks-header">
+      <div>
+        <div class="tasks-title" id="tasksPanelTitle">오늘의 학습</div>
+        <div class="tasks-date" id="tasksPanelDate">—</div>
+      </div>
+      <button class="add-task-btn" onclick="openAddTaskModal()">+ 새 Task</button>
+    </div>
+
+    <div class="tasks-body" id="tasksList">
+      <div class="empty-tasks">
+        <div class="icon">📋</div>
+        <p class="loading-dots">불러오는 중</p>
+      </div>
+    </div>
+
+    <!-- 챗봇 -->
+    <div class="chat-bar">
+      <div class="chat-label">// AI CHATBOT — Gemini 연동</div>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chatInput" placeholder="예: 미적분 5챕터까지 5월 1일 시험 / 4월 25일에 마트 가기" onkeydown="if(event.key==='Enter') sendChat()">
+        <button class="chat-send-btn active" onclick="sendChat()">SEND</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 만료 피드백 모달 -->
+<div class="modal-overlay" id="expiredModal">
+  <div class="modal">
+    <div class="modal-title">⚠️ 만료된 Task</div>
+    <div class="modal-sub">마감일이 지난 task들이 있습니다.<br>난이도 피드백을 입력하면 재배분에 반영됩니다.</div>
+    <div class="expired-list" id="expiredList"></div>
+    <div class="modal-actions">
+      <button class="modal-btn primary" onclick="submitExpiredFeedback()">피드백 저장 & 재배분</button>
+      <button class="modal-btn" onclick="closeModal('expiredModal')">나중에</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task 추가 모달 -->
+<div class="modal-overlay" id="addTaskModal">
+  <div class="modal">
+    <div class="modal-title">새 Task 추가</div>
+    <div class="modal-sub">과목과 챕터 수를 입력하면 AI가 마감일까지 자동 배분합니다.</div>
+    <div class="modal-field">
+      <label>과목</label>
+      <select id="newTaskSubject">
+        <option>미시경제학</option>
+        <option>거시경제학</option>
+        <option>계량경제학</option>
+        <option>국제경제학</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>챕터 수 (1~30)</label>
+      <input type="number" id="newTaskChapters" min="1" max="30" placeholder="예: 5">
+    </div>
+    <div class="modal-field">
+      <label>마감일</label>
+      <input type="date" id="newTaskDeadline">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn primary" onclick="submitAddTask()">추가하기</button>
+      <button class="modal-btn" onclick="closeModal('addTaskModal')">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 재배분 확인 모달 -->
+<div class="modal-overlay" id="redistModal">
+  <div class="modal">
+    <div class="modal-title">미완료 Task 재배분</div>
+    <div class="modal-sub">완료하지 못한 task들을 남은 날짜에 재배분합니다.<br>계속하시겠습니까?</div>
+    <div class="modal-actions">
+      <button class="modal-btn primary" onclick="confirmRedistribute()">재배분</button>
+      <button class="modal-btn" onclick="closeModal('redistModal')">취소</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = 'http://127.0.0.1:8001';
+  const SUBJECTS = ['미시경제학', '거시경제학', '계량경제학', '국제경제학'];
+  const SUBJECT_CLASS = ['s0','s1','s2','s3'];
+
+  let user = null;
+  let currentYear, currentMonth;
+  let monthSchedule = {}; // date_str -> [schedules]
+  let todayTasks = [];
+  let expiredFeedbacks = {}; // schedule_id -> difficulty
+
+  // ── 초기화 ──────────────────────────────
+  window.addEventListener('DOMContentLoaded', async () => {
+    user = JSON.parse(sessionStorage.getItem('user'));
+    if (!user) { location.href = '/frontend/login.html'; return; }
+
+    const now = new Date();
+    currentYear = now.getFullYear();
+    currentMonth = now.getMonth() + 1;
+
+    document.getElementById('navName').textContent = user.name;
+    document.getElementById('navMeta').textContent =
+      `${user.study_pattern} · ${user.exam_style} · 하루 ${user.max_tasks_per_day}개`;
+
+    // 만료 체크 먼저
+    await checkExpired();
+    await loadMonthSchedule();
+    loadTodayTasks();
+  });
+
+  // ── 만료 체크 ────────────────────────────
+  async function checkExpired() {
+    try {
+      const res = await fetch(`${API}/check-expired/${user.user_id}`, { method: 'POST' });
+      const data = await res.json();
+      // 응답: { expired_tasks: [{task_id, subject, title, deadline, ...}] }
+      const expired = data.expired_tasks || [];
+      if (expired.length > 0) showExpiredModal(expired);
+    } catch(e) { /* 서버 없으면 무시 */ }
+  }
+
+  function showExpiredModal(tasks) {
+    const list = document.getElementById('expiredList');
+    list.innerHTML = '';
+    tasks.forEach(t => {
+      // task_id 사용 (check-expired 응답 필드)
+      expiredFeedbacks[t.task_id] = null;
+      const el = document.createElement('div');
+      el.className = 'expired-item';
+      el.innerHTML = `
+        <div class="expired-item-name">📌 ${t.title} <span style="color:var(--muted);font-size:11px;">${t.subject}</span></div>
+        <div class="diff-btns">
+          <button class="diff-btn" onclick="selectDiff(this, ${t.task_id}, '쉬웠어요')">쉬웠어요</button>
+          <button class="diff-btn" onclick="selectDiff(this, ${t.task_id}, '보통이요')">보통이요</button>
+          <button class="diff-btn" onclick="selectDiff(this, ${t.task_id}, '어려웠어요')">어려웠어요</button>
+        </div>
+      `;
+      list.appendChild(el);
+    });
+    document.getElementById('expiredModal').classList.add('show');
+  }
+
+  function selectDiff(btn, taskId, val) {
+    expiredFeedbacks[taskId] = val;
+    btn.closest('.diff-btns').querySelectorAll('.diff-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+
+  async function submitExpiredFeedback() {
+    // PATCH /tasks/{task_id}/feedback  (task_id 기준, difficulty는 문자열)
+    for (const [taskId, diff] of Object.entries(expiredFeedbacks)) {
+      if (diff) {
+        try {
+          await fetch(`${API}/tasks/${taskId}/feedback`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ difficulty: diff })
+          });
+        } catch(e) {}
+      }
+    }
+    closeModal('expiredModal');
+    try {
+      await fetch(`${API}/redistribute/${user.user_id}`, { method: 'POST' });
+      showToast('피드백 저장 & 재배분 완료!', 'success');
+    } catch(e) {}
+    await loadMonthSchedule();
+    loadTodayTasks();
+  }
+
+  // ── 월별 캘린더 ───────────────────────────
+  async function loadMonthSchedule() {
+    const y = currentYear, m = currentMonth;
+    const startDate = `${y}-${String(m).padStart(2,'0')}-01`;
+    const lastDay = new Date(y, m, 0).getDate();
+    const endDate = `${y}-${String(m).padStart(2,'0')}-${lastDay}`;
+
+    try {
+      // 쿼리 파라미터: start, end  (start_date/end_date 아님)
+      const res = await fetch(`${API}/schedule/${user.user_id}/range?start=${startDate}&end=${endDate}`);
+      const data = await res.json();
+      // 응답: [{date, total, completed}, ...]  — 날짜별 집계값
+      monthSchedule = {};
+      data.forEach(s => {
+        monthSchedule[s.date] = s; // { date, total, completed }
+      });
+    } catch(e) { monthSchedule = {}; }
+
+    renderCalendar();
+    updateStats();
+  }
+
+  function renderCalendar() {
+    const y = currentYear, m = currentMonth;
+    document.getElementById('calTitle').textContent = `${y}년 ${m}월`;
+
+    const firstDay = new Date(y, m-1, 1).getDay();
+    const lastDay = new Date(y, m, 0).getDate();
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+
+    for (let i = 0; i < firstDay; i++) {
+      const el = document.createElement('div');
+      el.className = 'cal-day empty';
+      grid.appendChild(el);
+    }
+
+    for (let d = 1; d <= lastDay; d++) {
+      const dateStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dow = new Date(y, m-1, d).getDay();
+      const info = monthSchedule[dateStr]; // { date, total, completed } or undefined
+
+      const el = document.createElement('div');
+      el.className = `cal-day${dow===0?' sun':dow===6?' sat':''}${dateStr===todayStr?' today':''}`;
+      el.onclick = () => goToDetail(dateStr);
+
+      // range API는 과목 정보가 없으므로 완료/미완료 도트만 표시
+      let dots = '';
+      if (info && info.total > 0) {
+        const doneCnt = info.completed || 0;
+        const todoCnt = info.total - doneCnt;
+        dots += Array(Math.min(doneCnt, 4)).fill('<div class="dot done"></div>').join('');
+        dots += Array(Math.min(todoCnt, 4 - Math.min(doneCnt,4))).fill('<div class="dot s0"></div>').join('');
+      }
+
+      el.innerHTML = `<div class="day-num">${d}</div><div class="day-dots">${dots}</div>`;
+      grid.appendChild(el);
+    }
+  }
+
+  function updateStats() {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const todayInfo = monthSchedule[todayStr];
+    const done = todayInfo ? (todayInfo.completed || 0) : 0;
+    const total = todayInfo ? (todayInfo.total || 0) : 0;
+    document.getElementById('statDone').textContent = done;
+    document.getElementById('statDoneSub').textContent = `/ ${total} tasks`;
+
+    let totalDone = 0, totalAll = 0;
+    Object.values(monthSchedule).forEach(info => {
+      totalAll += info.total || 0;
+      totalDone += info.completed || 0;
+    });
+    document.getElementById('statMonth').textContent = totalDone;
+    document.getElementById('statRate').textContent =
+      totalAll > 0 ? Math.round(totalDone/totalAll*100)+'%' : '0%';
+  }
+
+  function changeMonth(delta) {
+    currentMonth += delta;
+    if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+    if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+    loadMonthSchedule();
+  }
+
+  // ── 오늘 할일 ─────────────────────────────
+  async function loadTodayTasks() {
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const days = ['일','월','화','수','목','금','토'];
+    document.getElementById('tasksPanelDate').textContent =
+      `${today.getFullYear()}년 ${today.getMonth()+1}월 ${today.getDate()}일 (${days[today.getDay()]})`;
+
+    try {
+      const res = await fetch(`${API}/schedule/${user.user_id}/${dateStr}`);
+      // 응답: [{id, task_id, date, task_name, completed, subject, deadline}, ...]
+      todayTasks = await res.json();
+      renderTasks(todayTasks);
+    } catch(e) {
+      todayTasks = [];
+      renderTasks([]);
+    }
+  }
+
+  function renderTasks(tasks) {
+    const el = document.getElementById('tasksList');
+    if (tasks.length === 0) {
+      el.innerHTML = `<div class="empty-tasks"><div class="icon">✨</div><p>오늘 예정된 학습이 없습니다.<br>새 Task를 추가해보세요!</p></div>`;
+      return;
+    }
+
+    el.innerHTML = '';
+    tasks.forEach((t, i) => {
+      const si = SUBJECTS.indexOf(t.subject);
+      const cls = si >= 0 ? SUBJECT_CLASS[si] : 's0';
+      const div = document.createElement('div');
+      // completed: 0 or 1 (integer, not boolean)
+      div.className = `task-item${t.completed ? ' done' : ''}`;
+      div.style.animationDelay = `${i*0.04}s`;
+      div.innerHTML = `
+        <div class="task-check" onclick="toggleTask(${t.id}, this.closest('.task-item'))">
+          <span class="check-icon">✓</span>
+        </div>
+        <div class="task-info">
+          <div class="task-name">${t.task_name}</div>
+          <div class="task-meta">
+            <span class="subject-badge ${cls}">${t.subject}</span>
+            <span class="task-deadline">${t.deadline ? '~' + t.deadline : ''}</span>
+          </div>
+        </div>
+        <button class="task-del-btn" onclick="deleteTask(${t.task_id})" title="삭제">✕</button>
+      `;
+      el.appendChild(div);
+    });
+
+    updateStats();
+  }
+
+  async function toggleTask(scheduleId, itemEl) {
+    try {
+      await fetch(`${API}/schedule/${scheduleId}/complete`, { method: 'PATCH' });
+      itemEl.classList.toggle('done');
+      // 로컬 상태 업데이트 (completed: 0/1)
+      const t = todayTasks.find(t => t.id === scheduleId);
+      if (t) t.completed = t.completed ? 0 : 1;
+      // 캘린더 통계는 다시 로드
+      await loadMonthSchedule();
+    } catch(e) { showToast('업데이트 실패', 'error'); }
+  }
+
+  async function deleteTask(taskId) {
+    if (!confirm('이 Task 전체를 삭제하시겠습니까?\n(해당 과목의 모든 일정이 삭제됩니다)')) return;
+    try {
+      const res = await fetch(`${API}/tasks/${taskId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      showToast('삭제되었습니다.', 'success');
+      await loadTodayTasks();
+      await loadMonthSchedule();
+    } catch(e) { showToast('삭제 실패', 'error'); }
+  }
+
+  // ── Task 추가 ────────────────────────────
+  function openAddTaskModal() {
+    const d = new Date(); d.setDate(d.getDate()+14);
+    const def = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    document.getElementById('newTaskDeadline').value = def;
+    document.getElementById('newTaskChapters').value = '';
+    document.getElementById('addTaskModal').classList.add('show');
+  }
+
+  async function submitAddTask() {
+    const subject = document.getElementById('newTaskSubject').value;
+    const chapters = parseInt(document.getElementById('newTaskChapters').value);
+    const deadline = document.getElementById('newTaskDeadline').value;
+
+    if (!deadline || isNaN(chapters) || chapters < 1 || chapters > 30) {
+      showToast('챕터 수(1~30)와 마감일을 확인해주세요.', 'error'); return;
+    }
+
+    // 마감일이 오늘 이후인지 검증 (백엔드도 체크하지만 UX를 위해 프론트도 확인)
+    if (deadline <= new Date().toISOString().slice(0,10)) {
+      showToast('마감일은 오늘 이후여야 합니다.', 'error'); return;
+    }
+
+    try {
+      const res = await fetch(`${API}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // POST /tasks body: user_id, subject, chapters, deadline, study_speed(optional)
+        body: JSON.stringify({ user_id: user.user_id, subject, chapters, deadline })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || '추가 실패');
+      closeModal('addTaskModal');
+      // overflow_dates 경고 표시
+      if (data.overflow_dates && data.overflow_dates.length > 0) {
+        showToast(`추가 완료! (${data.overflow_dates.length}일 하루 한도 초과)`, 'warn');
+      } else {
+        showToast(`Task 추가 완료! 총 ${data.total_tasks}개 배분됨`, 'success');
+      }
+      await loadMonthSchedule();
+      loadTodayTasks();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  // ── 재배분 ───────────────────────────────
+  function redistributeTasks() {
+    document.getElementById('redistModal').classList.add('show');
+  }
+
+  async function confirmRedistribute() {
+    closeModal('redistModal');
+    try {
+      const res = await fetch(`${API}/redistribute/${user.user_id}`, { method: 'POST' });
+      if (!res.ok) throw new Error();
+      showToast('재배분 완료!', 'success');
+      await loadMonthSchedule();
+      loadTodayTasks();
+    } catch(e) { showToast('재배분 실패', 'error'); }
+  }
+
+  // ── 날짜 클릭 → detail ────────────────────
+  function goToDetail(dateStr) {
+    sessionStorage.setItem('selectedDate', dateStr);
+    location.href = '/frontend/detail.html';
+  }
+
+  // ── 유틸 ─────────────────────────────────
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('show');
+  }
+
+  function logout() {
+    sessionStorage.removeItem('user');
+    location.href = '/frontend/login.html';
+  }
+
+  // ── 챗봇 ─────────────────────────────────
+  async function sendChat() {
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    addChatMsg(msg, 'user');
+    input.value = '';
+
+    // 로딩 메시지
+    const loadingEl = addChatMsg('생각 중...', 'bot');
+
+    try {
+      const res = await fetch(`${API}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.user_id, message: msg })
+      });
+      const data = await res.json();
+      loadingEl.textContent = data.reply;
+
+      // task 등록됐으면 캘린더 + 오늘 할일 갱신
+      if (data.type === 'project' || data.type === 'simple') {
+        await loadMonthSchedule();
+        loadTodayTasks();
+      }
+    } catch(e) {
+      loadingEl.textContent = '연결 오류가 발생했어요. 서버를 확인해주세요.';
+    }
+  }
+
+  function addChatMsg(text, role) {
+    const el = document.createElement('div');
+    el.className = `chat-msg ${role}`;
+    el.textContent = text;
+    const box = document.getElementById('chatMessages');
+    box.appendChild(el);
+    box.scrollTop = box.scrollHeight;
+    return el;
+  }
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>

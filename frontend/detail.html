@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyOS — 날짜 상세</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f0e;
+    --surface: #141714;
+    --surface2: #191c19;
+    --border: #252825;
+    --accent: #b5d49b;
+    --accent-dim: #7aa362;
+    --text: #e8ede6;
+    --muted: #6b7a68;
+    --danger: #d4736b;
+    --warn: #d4b96b;
+    --input-bg: #1a1e1a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* 배경 격자 */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.2;
+    pointer-events: none;
+  }
+
+  /* 네비 */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .nav-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+  }
+  .nav-logo span { color: var(--accent); }
+
+  .back-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 6px 14px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .back-btn:hover { border-color: var(--muted); color: var(--text); }
+
+  /* 메인 컨텐츠 */
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+    position: relative;
+  }
+
+  /* 날짜 헤더 */
+  .page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .date-display {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .date-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .date-main {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px;
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
+
+  .date-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* 통계 박스 */
+  .summary-cards {
+    display: flex;
+    gap: 12px;
+  }
+
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 16px 20px;
+    text-align: center;
+    min-width: 90px;
+  }
+
+  .s-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .s-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* 진행률 바 */
+  .progress-section {
+    margin-bottom: 28px;
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .progress-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .progress-pct {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  /* 과목별 섹션 */
+  .section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Task 카드 */
+  .tasks-section { margin-bottom: 32px; }
+
+  .task-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .task-card:hover { border-color: #333b33; }
+  .task-card.done { opacity: 0.5; }
+
+  .task-card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .task-toggle {
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.15s;
+  }
+  .task-toggle:hover { border-color: var(--accent-dim); }
+  .task-card.done .task-toggle {
+    background: var(--accent-dim);
+    border-color: var(--accent-dim);
+  }
+  .check-icon { display: none; font-size: 11px; color: #0d0f0e; font-weight: bold; }
+  .task-card.done .check-icon { display: block; }
+
+  .task-card-body { flex: 1; }
+
+  .task-card-name {
+    font-size: 15px;
+    color: var(--text);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .task-card.done .task-card-name {
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+
+  .task-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 2px;
+    letter-spacing: 0.04em;
+  }
+
+  .tag.subject { }
+  .s0 { background: rgba(181,212,155,0.12); color: #b5d49b; }
+  .s1 { background: rgba(155,189,212,0.12); color: #9bbdd4; }
+  .s2 { background: rgba(212,185,107,0.12); color: #d4b96b; }
+  .s3 { background: rgba(212,155,181,0.12); color: #d49bb5; }
+
+  .tag.deadline {
+    background: rgba(212,115,107,0.1);
+    color: var(--danger);
+  }
+
+  .tag.hours {
+    background: var(--surface2);
+    color: var(--muted);
+  }
+
+
+
+  .task-del-btn {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0;
+    transition: all 0.15s;
+  }
+
+  .task-card:hover .task-del-btn { opacity: 1; }
+  .task-del-btn:hover { color: var(--danger); }
+
+  /* 빈 상태 */
+  .empty-state {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--muted);
+  }
+
+  .empty-state .icon { font-size: 36px; margin-bottom: 16px; }
+  .empty-state p { font-size: 14px; line-height: 1.8; }
+
+  /* 구분선 */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 28px 0;
+  }
+
+  /* Task 추가 버튼 */
+  .add-btn {
+    width: 100%;
+    padding: 14px;
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: 2px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+  }
+  .add-btn:hover { border-color: var(--accent-dim); color: var(--accent); background: rgba(181,212,155,0.04); }
+
+  /* 모달 */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13,15,14,0.85);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 32px;
+    width: 460px;
+    max-width: 90vw;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.6);
+  }
+
+  .modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+
+  .modal-sub {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+
+  .modal-field { margin-bottom: 16px; }
+
+  .modal-field label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .modal-field input, .modal-field select {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    padding: 10px 14px;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .modal-field input:focus, .modal-field select:focus { border-color: var(--accent-dim); }
+  .modal-field select option { background: var(--input-bg); }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .modal-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 2px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--muted);
+  }
+
+  .modal-btn.primary {
+    background: var(--accent);
+    color: #0d0f0e;
+    border-color: var(--accent);
+  }
+
+  .modal-btn.primary:hover { background: #c8e4af; }
+  .modal-btn:hover { border-color: var(--muted); color: var(--text); }
+
+  /* 토스트 */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 12px 18px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    z-index: 200;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.25s;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-left: 3px solid var(--accent); }
+  .toast.error { border-left: 3px solid var(--danger); }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .task-card { animation: fadeUp 0.25s ease both; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-left">
+    <div class="nav-logo">Study<span>OS</span></div>
+    <button class="back-btn" onclick="location.href='/frontend/index.html'">← 대시보드</button>
+  </div>
+  <div style="font-family:'DM Mono',monospace; font-size:11px; color:var(--muted);" id="navUser">—</div>
+</nav>
+
+<div class="page">
+
+  <!-- 날짜 헤더 -->
+  <div class="page-header">
+    <div class="date-display">
+      <div class="date-label">// SCHEDULE DETAIL</div>
+      <div class="date-main" id="dateMain">—</div>
+      <div class="date-sub" id="dateSub">—</div>
+    </div>
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="s-val" id="sumTotal">0</div>
+        <div class="s-label">전체</div>
+      </div>
+      <div class="summary-card">
+        <div class="s-val" id="sumDone">0</div>
+        <div class="s-label">완료</div>
+      </div>
+      <div class="summary-card">
+        <div class="s-val" id="sumLeft">0</div>
+        <div class="s-label">남은 것</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 진행률 -->
+  <div class="progress-section">
+    <div class="progress-header">
+      <span class="progress-title">// COMPLETION</span>
+      <span class="progress-pct" id="progressPct">0%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Task 목록 -->
+  <div class="tasks-section">
+    <div class="section-title">// TASKS</div>
+    <div id="tasksList">
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <p>불러오는 중...</p>
+      </div>
+    </div>
+    <button class="add-btn" onclick="openAddModal()">+ 새 Task 추가</button>
+  </div>
+
+</div>
+
+<!-- Task 추가 모달 -->
+<div class="modal-overlay" id="addTaskModal">
+  <div class="modal">
+    <div class="modal-title">새 Task 추가</div>
+    <div class="modal-sub">과목과 챕터 수를 입력하면 AI가 마감일까지 자동 배분합니다.</div>
+    <div class="modal-field">
+      <label>과목</label>
+      <select id="newTaskSubject">
+        <option>미시경제학</option>
+        <option>거시경제학</option>
+        <option>계량경제학</option>
+        <option>국제경제학</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>챕터 수 (1~30)</label>
+      <input type="number" id="newTaskChapters" min="1" max="30" placeholder="예: 5">
+    </div>
+    <div class="modal-field">
+      <label>마감일</label>
+      <input type="date" id="newTaskDeadline">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn primary" onclick="submitAddTask()">추가하기</button>
+      <button class="modal-btn" onclick="closeModal('addTaskModal')">취소</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = 'http://127.0.0.1:8001';
+  const SUBJECTS = ['미시경제학', '거시경제학', '계량경제학', '국제경제학'];
+  const SUBJECT_CLASS = ['s0','s1','s2','s3'];
+  const DAYS = ['일','월','화','수','목','금','토'];
+
+  let user = null;
+  let selectedDate = '';
+  let schedules = [];
+
+  // ── 초기화 ───────────────────────────────
+  window.addEventListener('DOMContentLoaded', async () => {
+    user = JSON.parse(sessionStorage.getItem('user'));
+    if (!user) { location.href = '/frontend/login.html'; return; }
+
+    selectedDate = sessionStorage.getItem('selectedDate') || getTodayStr();
+    document.getElementById('navUser').textContent = user.name;
+
+    renderDateHeader();
+    await loadSchedules();
+  });
+
+  function getTodayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function renderDateHeader() {
+    const [y, m, d] = selectedDate.split('-').map(Number);
+    const dateObj = new Date(y, m-1, d);
+    const dow = DAYS[dateObj.getDay()];
+
+    document.getElementById('dateMain').textContent = `${m}월 ${d}일 (${dow})`;
+    document.getElementById('dateSub').textContent = `${y}년`;
+  }
+
+  // ── 스케줄 로드 ───────────────────────────
+  async function loadSchedules() {
+    try {
+      const res = await fetch(`${API}/schedule/${user.user_id}/${selectedDate}`);
+      // 응답: [{id, task_id, date, task_name, completed, subject, deadline}, ...]
+      schedules = await res.json();
+      renderAll();
+    } catch(e) {
+      schedules = [];
+      renderAll();
+    }
+  }
+
+  function renderAll() {
+    renderStats();
+    renderTasks();
+  }
+
+  function renderStats() {
+    const total = schedules.length;
+    // completed: 0 or 1 (integer)
+    const done = schedules.filter(s => s.completed === 1).length;
+    const left = total - done;
+    const pct = total > 0 ? Math.round(done/total*100) : 0;
+
+    document.getElementById('sumTotal').textContent = total;
+    document.getElementById('sumDone').textContent = done;
+    document.getElementById('sumLeft').textContent = left;
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('progressFill').style.width = pct + '%';
+  }
+
+  function renderTasks() {
+    const el = document.getElementById('tasksList');
+
+    if (schedules.length === 0) {
+      el.innerHTML = `<div class="empty-state"><div class="icon">✨</div><p>이 날짜에 예정된 학습이 없습니다.</p></div>`;
+      return;
+    }
+
+    el.innerHTML = '';
+    schedules.forEach((s, i) => {
+      const si = SUBJECTS.indexOf(s.subject);
+      const cls = si >= 0 ? SUBJECT_CLASS[si] : 's0';
+      // id = daily_schedule.id (완료 토글용), task_id = tasks.id (삭제/피드백용)
+      const schedId = s.id;
+      const taskId = s.task_id;
+
+      const card = document.createElement('div');
+      card.className = `task-card${s.completed === 1 ? ' done' : ''}`;
+      card.style.animationDelay = `${i*0.05}s`;
+      card.id = `card-${schedId}`;
+
+      card.innerHTML = `
+        <button class="task-del-btn" onclick="deleteTask(${taskId})" title="삭제">✕</button>
+        <div class="task-card-top">
+          <div class="task-toggle" onclick="toggleComplete(${schedId})">
+            <span class="check-icon">✓</span>
+          </div>
+          <div class="task-card-body">
+            <div class="task-card-name">${s.task_name}</div>
+            <div class="task-card-tags">
+              <span class="tag subject ${cls}">${s.subject}</span>
+              ${s.deadline ? `<span class="tag deadline">~${s.deadline}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+      el.appendChild(card);
+    });
+  }
+
+  // ── 완료 토글 ─────────────────────────────
+  async function toggleComplete(scheduleId) {
+    try {
+      await fetch(`${API}/schedule/${scheduleId}/complete`, { method: 'PATCH' });
+      // 로컬 상태 업데이트 (0↔1 토글)
+      const s = schedules.find(s => s.id === scheduleId);
+      if (s) s.completed = s.completed === 1 ? 0 : 1;
+      const card = document.getElementById(`card-${scheduleId}`);
+      if (card) card.classList.toggle('done');
+      renderStats();
+    } catch(e) { showToast('업데이트 실패', 'error'); }
+  }
+
+
+
+  // ── Task 삭제 ─────────────────────────────
+  // DELETE /tasks/{task_id}  — task 전체 삭제 (해당 task의 모든 daily_schedule도 삭제됨)
+  async function deleteTask(taskId) {
+    if (!confirm('이 Task 전체를 삭제하시겠습니까?\n(해당 과목의 모든 일정이 삭제됩니다)')) return;
+    try {
+      const res = await fetch(`${API}/tasks/${taskId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      await loadSchedules();
+      showToast('삭제되었습니다.', 'success');
+    } catch(e) { showToast('삭제 실패', 'error'); }
+  }
+
+  // ── Task 추가 ─────────────────────────────
+  function openAddModal() {
+    document.getElementById('newTaskDeadline').value = '';
+    document.getElementById('newTaskChapters').value = '';
+    document.getElementById('addTaskModal').classList.add('show');
+  }
+
+  // POST /tasks body: user_id, subject, chapters (int), deadline
+  async function submitAddTask() {
+    const subject = document.getElementById('newTaskSubject').value;
+    const chapters = parseInt(document.getElementById('newTaskChapters').value);
+    const deadline = document.getElementById('newTaskDeadline').value;
+
+    if (!deadline || isNaN(chapters) || chapters < 1 || chapters > 30) {
+      showToast('챕터 수(1~30)와 마감일을 확인해주세요.', 'error'); return;
+    }
+    if (deadline <= new Date().toISOString().slice(0,10)) {
+      showToast('마감일은 오늘 이후여야 합니다.', 'error'); return;
+    }
+
+    try {
+      const res = await fetch(`${API}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.user_id, subject, chapters, deadline })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || '추가 실패');
+      closeModal('addTaskModal');
+      if (data.overflow_dates && data.overflow_dates.length > 0) {
+        showToast(`추가 완료! (${data.overflow_dates.length}일 하루 한도 초과)`, 'warn');
+      } else {
+        showToast(`Task 추가 완료! 총 ${data.total_tasks}개 배분됨`, 'success');
+      }
+      await loadSchedules();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  // ── 유틸 ─────────────────────────────────
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('show');
+  }
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>

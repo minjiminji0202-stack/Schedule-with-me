@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyOS — 로그인</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f0e;
+    --surface: #141714;
+    --border: #252825;
+    --accent: #b5d49b;
+    --accent-dim: #7aa362;
+    --text: #e8ede6;
+    --muted: #6b7a68;
+    --danger: #d4736b;
+    --input-bg: #1a1e1a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* 배경 격자 패턴 */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  /* 배경 그라디언트 orb */
+  body::after {
+    content: '';
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(181,212,155,0.06) 0%, transparent 70%);
+    top: -100px;
+    right: -100px;
+    pointer-events: none;
+  }
+
+  .wrapper {
+    display: flex;
+    gap: 0;
+    width: 860px;
+    min-height: 560px;
+    position: relative;
+    z-index: 1;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+  }
+
+  /* 왼쪽 브랜드 패널 */
+  .brand-panel {
+    width: 340px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .brand-panel::before {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    left: -60px;
+    width: 280px;
+    height: 280px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+
+  .brand-panel::after {
+    content: '';
+    position: absolute;
+    bottom: -120px;
+    left: -120px;
+    width: 440px;
+    height: 440px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    opacity: 0.25;
+  }
+
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  .logo span { color: var(--accent); }
+
+  .tagline {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.08em;
+    margin-top: 8px;
+  }
+
+  .brand-desc {
+    position: relative;
+    z-index: 1;
+  }
+
+  .brand-desc h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    line-height: 1.5;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .brand-desc h2 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .brand-desc p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  .subjects-tag {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 24px;
+  }
+
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* 오른쪽 폼 패널 */
+  .form-panel {
+    flex: 1;
+    background: var(--bg);
+    padding: 48px 44px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 탭 */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    padding: 10px 0;
+    margin-right: 28px;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+  }
+
+  .tab-btn.active {
+    color: var(--accent);
+  }
+
+  .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  /* 폼 */
+  .form-section { display: none; flex-direction: column; gap: 0; flex: 1; }
+  .form-section.active { display: flex; }
+
+  .field {
+    margin-bottom: 18px;
+  }
+
+  .field label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .field input, .field select {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+
+  .field input:focus, .field select:focus {
+    border-color: var(--accent-dim);
+  }
+
+  .field input::placeholder { color: var(--muted); }
+
+  .field select option {
+    background: var(--input-bg);
+  }
+
+  /* 라디오 그룹 */
+  .radio-group {
+    display: flex;
+    gap: 8px;
+  }
+
+  .radio-item {
+    flex: 1;
+    position: relative;
+  }
+
+  .radio-item input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .radio-item label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Noto Sans KR', sans-serif;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .radio-item input[type="radio"]:checked + label {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(181,212,155,0.06);
+  }
+
+  /* 2컬럼 행 */
+  .field-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  .field-row .field { flex: 1; }
+
+  /* 에러 */
+  .error-msg {
+    font-size: 12px;
+    color: var(--danger);
+    font-family: 'DM Mono', monospace;
+    margin-top: -10px;
+    margin-bottom: 12px;
+    display: none;
+  }
+
+  .error-msg.show { display: block; }
+
+  /* 제출 버튼 */
+  .submit-btn {
+    margin-top: auto;
+    padding-top: 12px;
+    width: 100%;
+    background: var(--accent);
+    color: #0d0f0e;
+    border: none;
+    border-radius: 2px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+
+  .submit-btn:hover {
+    background: #c8e4af;
+    transform: translateY(-1px);
+  }
+
+  .submit-btn:active { transform: translateY(0); }
+
+  .submit-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* 토스트 */
+  .toast {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 14px 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    z-index: 1000;
+    transform: translateX(120%);
+    transition: transform 0.3s ease;
+    max-width: 280px;
+  }
+
+  .toast.show { transform: translateX(0); }
+  .toast.success { border-left: 3px solid var(--accent); }
+  .toast.error { border-left: 3px solid var(--danger); }
+
+  /* 로딩 스피너 */
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(13,15,14,0.3);
+    border-top-color: #0d0f0e;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+
+  /* 페이드인 애니메이션 */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .wrapper { animation: fadeUp 0.5s ease both; }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+  <!-- 왼쪽 브랜드 -->
+  <div class="brand-panel">
+    <div>
+      <div class="logo">Study<span>OS</span></div>
+      <div class="tagline">// AI-POWERED SCHEDULER</div>
+    </div>
+
+    <div class="brand-desc">
+      <h2>시험까지,<br><em>AI가 함께</em><br>계획합니다.</h2>
+      <p>과목별 난이도와 학습 패턴을 분석해<br>최적의 공부 일정을 자동으로 배분합니다.</p>
+
+    </div>
+
+    <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--muted);">
+      20230478 김민지
+    </div>
+  </div>
+
+  <!-- 오른쪽 폼 -->
+  <div class="form-panel">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('login')">LOGIN</button>
+      <button class="tab-btn" onclick="switchTab('signup')">SIGN_UP</button>
+    </div>
+
+    <!-- 로그인 폼 -->
+    <div class="form-section active" id="loginForm">
+      <div class="field">
+        <label>이름</label>
+        <input type="text" id="loginName" placeholder="홍길동" maxlength="20">
+      </div>
+      <div class="field">
+        <label>비밀번호 (숫자 4자리)</label>
+        <input type="password" id="loginPw" placeholder="••••" maxlength="4" inputmode="numeric">
+      </div>
+      <div class="error-msg" id="loginError">이름 또는 비밀번호가 올바르지 않습니다.</div>
+      <button class="submit-btn" onclick="handleLogin()">LOGIN →</button>
+    </div>
+
+    <!-- 회원가입 폼 -->
+    <div class="form-section" id="signupForm">
+      <div class="field">
+        <label>이름 (띄어쓰기 없이)</label>
+        <input type="text" id="signupName" placeholder="홍길동" maxlength="20">
+      </div>
+      <div class="field">
+        <label>비밀번호 (숫자 4자리)</label>
+        <input type="password" id="signupPw" placeholder="••••" maxlength="4" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>하루 최대 학습량 (1~20)</label>
+        <input type="number" id="maxTasks" min="1" max="20" placeholder="5">
+      </div>
+      <div class="field">
+        <label>학습 패턴</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" name="study_pattern" id="sp1" value="집중형" checked>
+            <label for="sp1">집중형</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" name="study_pattern" id="sp2" value="분산형">
+            <label for="sp2">분산형</label>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>시험 스타일</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" name="exam_style" id="es1" value="단원평가형" checked>
+            <label for="es1">단원평가형</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" name="exam_style" id="es2" value="모의고사형">
+            <label for="es2">모의고사형</label>
+          </div>
+        </div>
+      </div>
+      <div class="error-msg" id="signupError"></div>
+      <button class="submit-btn" onclick="handleSignup()">CREATE ACCOUNT →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = 'http://127.0.0.1:8001';
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+      b.classList.toggle('active', (i === 0) === (tab === 'login'));
+    });
+    document.getElementById('loginForm').classList.toggle('active', tab === 'login');
+    document.getElementById('signupForm').classList.toggle('active', tab === 'signup');
+  }
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  async function handleLogin() {
+    const name = document.getElementById('loginName').value.trim();
+    const pw = document.getElementById('loginPw').value.trim();
+    const errEl = document.getElementById('loginError');
+    errEl.classList.remove('show');
+
+    if (!name || !pw) { errEl.textContent = '모든 항목을 입력해주세요.'; errEl.classList.add('show'); return; }
+
+    const btn = document.querySelector('#loginForm .submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>로그인 중...';
+
+    try {
+      const res = await fetch(`${API}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, password: pw })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || '로그인 실패');
+
+      sessionStorage.setItem('user', JSON.stringify(data));
+      showToast('로그인 성공! 이동합니다...');
+      setTimeout(() => location.href = '/frontend/index.html', 800);
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'LOGIN →';
+    }
+  }
+
+  async function handleSignup() {
+    const name = document.getElementById('signupName').value.trim();
+    const pw = document.getElementById('signupPw').value.trim();
+    const maxTasks = parseInt(document.getElementById('maxTasks').value);
+    const studyPattern = document.querySelector('input[name="study_pattern"]:checked').value;
+    const examStyle = document.querySelector('input[name="exam_style"]:checked').value;
+    const errEl = document.getElementById('signupError');
+    errEl.classList.remove('show');
+
+    if (!name || !pw) { errEl.textContent = '모든 항목을 입력해주세요.'; errEl.classList.add('show'); return; }
+    if (!/^[가-힣a-zA-Z]+$/.test(name)) { errEl.textContent = '이름은 한글/영어, 띄어쓰기 없이 입력해주세요.'; errEl.classList.add('show'); return; }
+    if (!/^\d{4}$/.test(pw)) { errEl.textContent = '비밀번호는 숫자 4자리여야 합니다.'; errEl.classList.add('show'); return; }
+    if (isNaN(maxTasks) || maxTasks < 1 || maxTasks > 20) { errEl.textContent = '하루 최대 학습량은 1~20이어야 합니다.'; errEl.classList.add('show'); return; }
+
+    const btn = document.querySelector('#signupForm .submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>가입 중...';
+
+    try {
+      const res = await fetch(`${API}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, password: pw, max_tasks_per_day: maxTasks, study_pattern: studyPattern, exam_style: examStyle })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || '가입 실패');
+
+      showToast('가입 완료! 로그인해주세요.');
+      switchTab('login');
+      document.getElementById('loginName').value = name;
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.classList.add('show');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'CREATE ACCOUNT →';
+    }
+  }
+
+  // 엔터키 지원
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (document.getElementById('loginForm').classList.contains('active')) handleLogin();
+      else handleSignup();
+    }
+  });
+</script>
+</body>
+</html>
