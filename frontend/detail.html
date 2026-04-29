@@ -303,8 +303,16 @@
 
 
 
-  .task-del-btn {
-    position: absolute;
+  .task-toggle.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: var(--border);
+  }
+
+  .task-card.missed {
+    border-color: rgba(212,115,107,0.3);
+    opacity: 0.7;
+  }
     top: 12px;
     right: 14px;
     background: none;
@@ -646,30 +654,37 @@
       return;
     }
 
+    const isPast = selectedDate < getTodayStr();
+
     el.innerHTML = '';
     schedules.forEach((s, i) => {
       const si = SUBJECTS.indexOf(s.subject);
       const cls = si >= 0 ? SUBJECT_CLASS[si] : 's0';
-      // id = daily_schedule.id (완료 토글용), task_id = tasks.id (삭제/피드백용)
       const schedId = s.id;
       const taskId = s.task_id;
 
       const card = document.createElement('div');
-      card.className = `task-card${s.completed === 1 ? ' done' : ''}`;
+      // 지난 날짜이고 미완료면 강제로 missed 표시
+      const isMissed = isPast && s.completed !== 1;
+      card.className = `task-card${s.completed === 1 ? ' done' : ''}${isMissed ? ' missed' : ''}`;
       card.style.animationDelay = `${i*0.05}s`;
       card.id = `card-${schedId}`;
+
+      // 지난 날짜면 토글 비활성화
+      const toggleHtml = isPast
+        ? `<div class="task-toggle disabled" title="지난 날짜는 변경할 수 없습니다"><span class="check-icon">✓</span></div>`
+        : `<div class="task-toggle" onclick="toggleComplete(${schedId})"><span class="check-icon">✓</span></div>`;
 
       card.innerHTML = `
         <button class="task-del-btn" onclick="deleteTask(${taskId})" title="삭제">✕</button>
         <div class="task-card-top">
-          <div class="task-toggle" onclick="toggleComplete(${schedId})">
-            <span class="check-icon">✓</span>
-          </div>
+          ${toggleHtml}
           <div class="task-card-body">
             <div class="task-card-name">${s.task_name}</div>
             <div class="task-card-tags">
               <span class="tag subject ${cls}">${s.subject}</span>
               ${s.deadline ? `<span class="tag deadline">~${s.deadline}</span>` : ''}
+              ${isMissed ? `<span class="tag" style="background:rgba(212,115,107,0.12);color:var(--danger);">미완료</span>` : ''}
             </div>
           </div>
         </div>

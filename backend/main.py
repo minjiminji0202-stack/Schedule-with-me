@@ -456,7 +456,7 @@ def redistribute(user_id: int):
         deadline_date = date.fromisoformat(task['deadline'])
         if deadline_date <= today:
             continue
-        cursor.execute("SELECT task_name FROM daily_schedule WHERE task_id = %s AND completed = 0 AND date < %s ORDER BY date ASC, id ASC", (task_id, today_str))
+        cursor.execute("SELECT task_name FROM daily_schedule WHERE task_id = %s AND completed = 0 AND date <= %s ORDER BY date ASC, id ASC", (task_id, today_str))
         incomplete_names = [r['task_name'] for r in cursor.fetchall()]
         if not incomplete_names:
             continue
