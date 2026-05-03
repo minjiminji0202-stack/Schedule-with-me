@@ -157,7 +157,6 @@ def distribute_to_schedule(task_id, task_names, start_date, deadline_date, speed
     return {"overflow_dates": assigned["overflow_dates"]}
 
 
-# ── Pydantic 모델 ──────────────────────────────────────
 
 class SignupData(BaseModel):
     name: str
